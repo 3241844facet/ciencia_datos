@@ -84,7 +84,6 @@ defecto) y la guía oficial de Pytest para estructurar las aserciones de los cas
 
 ### Qué harías distinto con más tiempo
 
-Con más tiempo, implementaría la validación de esquemas de datos mediante bibliotecas como `Pydantic` o usando tipado
-estático con `mypy`. Actualmente, las funciones asumen que los diccionarios contienen obligatoriamente las claves
+Con más tiempo, implementaría la validación de esquemas. Actualmente, las funciones asumen que los diccionarios contienen obligatoriamente las claves
 `'car_make'`, `'car_model'` y `'sale_price'`. Si una estructura llega incompleta, el código lanza un `KeyError`.
 Validar la entrada garantizaría un código más robusto ante datos corruptos.
