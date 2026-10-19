@@ -78,7 +78,11 @@ en producción.
 
 #### Ayudas externas
 Para completar la tarea utilicé la documentación oficial de Ruff sobre la regla `B006` (argumentos mutables por
-defecto) y la guía oficial de Pytest para estructurar las aserciones de los casos borde.
+defecto) https://docs-astral-sh.translate.goog/ruff/rules/mutable-argument-default/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc 
+y la guía oficial de Pytest para estructurar las aserciones de los casos borde https://docs.pytest.org/en/stable/.
+
+Asimismo, utilicé la asistencia de Gemini como apoyo interactivo para revisar la sintonía fina del conteo de palabras,
+aclarar conceptos y validar la correcta alineación del contenido con la matriz de evaluaciones.
 
 ---
 
