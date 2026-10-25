@@ -19,48 +19,52 @@ Informe técnico acotado para el cierre de cada unidad
 ### Qué se hizo
 
 En esta segunda unidad construí un pipeline de extracción y carga (EL) automatizado en Python utilizando la librería
-`dlt` para consumir datos paginados desde una API pública REST (Rick and Morty API) y persistirlos directamente en un
-motor analítico `DuckDB`.
+`dlt` para consumir datos paginados desde la API pública PokeAPI (`https://pokeapi.co/api/v2/pokemon`), enriquecerlos
+con metadatos detallados de cada entidad (tipos, habilidades y movimientos principales) e insertarlos en el motor
+analítico `DuckDB`.
 
 #### Entorno
-Trabajé sobre el entorno configurado en la unidad anterior, asegurando la instalación de las dependencias `dlt` y
-`duckdb` mediante el gestor `uv`. Verifiqué la disponibilidad de las herramientas ejecutando los scripts del entorno.
+Trabajé sobre el entorno configurado en el Dev Container del repositorio. Verifiqué la instalación de las
+dependencias `dlt`, `duckdb` y `requests`, asegurando que los comandos de prueba y linter ejecutaran correctamente.
 
 #### Flujo de Git
 Creé la rama de trabajo `u2/3241844facet` e introduje los archivos dentro de la carpeta
-`u2-pipeline/entregas/3241844facet/`. Realicé más de tres commits pequeños y explicativos según las buenas prácticas de
-desarrollo y abrí el Pull Request correspondiente hacia el repositorio original.
+`u2-pipeline/entregas/3241844facet/`. Realicé tres commits pequeños y explicativos según las buenas prácticas de
+desarrollo y abrí el Pull Request correspondiente en mi fork hacia mi rama `main`.
 
 ---
 
 ### Una decisión de diseño, explicada
 
-Elegí utilizar el decorador `@dlt.resource` configurado con la disposición `write_disposition="replace"` para la
-gestión del almacenamiento de la tabla `personajes`.
+Elegí estructurar un pipeline de dos niveles dentro del recurso `pokemon` que serializa los atributos anidados mediante
+`json.dumps()`.
 
-Al consumir una API externa que entrega la lista completa de la entidad, implementar una estrategia de reemplazo
-garantiza la idempotencia del pipeline de datos. Si el proceso de ingesta se ejecuta múltiples veces
-consecutivas (por ejemplo, en un entorno de integración continua o en ejecuciones programadas), `dlt` recrea la tabla de
-forma limpia sin duplicar registros ni requerir lógica compleja de deduplicación manual.
+Inicialmente, al enviar listas de Python dentro del diccionario (como `tipos: ['grass']`), el motor de normalización de
+`dlt` intentaba crear tablas relacionales secundarias conectadas por claves foráneas (`pokemon__tipos`). Para
+mantener un esquema plano de una sola tabla relacional en DuckDB, serialicé los arreglos a cadenas en formato JSON.
+Esto permite consultar los metadatos en una única tabla `raw_pokeapi.pokemon` sin requerir JOINs complejos.
 
-Adicionalmente, diseñé la extracción utilizando un generador `while` con `yield` para consumir la paginación de la API
-por lotes de manera eficiente, evitando sobrecargar la memoria RAM al procesar volúmenes crecientes de datos.
+Adicionalmente, implementé la eliminación previa del archivo `data.duckdb` en `main()` usando `Path.unlink()` para
+garantizar la reconstrucción desde cero en cada ejecución, e incorporé pausas de *cooldown* con `time.sleep` para
+evitar el bloqueo o estrangulamiento de la IP por solicitudes consecutivas (*rate limiting*).
 
 ---
 
 ### Un problema que apareció
 
-Durante las pruebas iniciales con `dlt`, el esquema automático infirió tipos de datos dinámicos basados en la primera
-página devuelta por la API. Sin embargo, al procesar páginas subsecuentes, algunos campos JSON anidados (como la
-ubicación u origen del personaje) presentaban estructuras variables.
+Durante la ejecución y pruebas del pipeline se identificaron dos problemas principales.
 
-Esto generaba advertencias en la evolución del esquema relacional y la creación no deseada de tablas secundarias
-anidadas no planificadas en DuckDB.
+En primer lugar, realizar múltiples peticiones consecutivas por cada Pokémon a la API pública podía causar un bloqueo
+temporal o error HTTP 429 por saturación de tráfico. Lo solucioné implementando pausas cortas de 0.1s por detalle y
+0.5s entre páginas, asegurando un consumo eficiente y respetuoso del servidor.
 
-Lo resolví revisando el comportamiento de normalización automática de `dlt`. Al no forzar esquemas rígidos antes de la
-ingesta, `dlt` logró aplanar los objetos JSON anidados en columnas compuestas (`origin__name`, `location__name`).
-Comprobé el resultado abriendo `data.duckdb` desde el script `verificar_datos.py`, constatando que la estructura de la
-tabla final era limpia, coherente y fácil de consultar en SQL estándar.
+En segundo lugar, la integración de metadatos enriquecidos requirió adaptar las pruebas unitarias en Pytest. Al
+hacer peticiones anidadas, se implementó un mockeo multinivel con `side_effect` en `requests.get` para simular tanto
+la lista paginada como los JSONs individuales. Asimismo, se gestionó la abstracción de `dlt`, que aplana los
+generadores con listas y envuelve las fallas de red dentro de su excepción interna `ResourceExtractionError`.
+
+Lo resolví manteniendo una suite de 6 pruebas unitarias que verifican la serialización JSON de atributos, la
+paginación múltiple, el manejo de respuestas vacías, errores de red HTTP 500 y las pausas con `mock_sleep`.
 
 ---
 
@@ -72,17 +76,16 @@ necesidad de escribir código repetitivo para el manejo de esquemas o conectores
 persistencia local sin requerir la administración de servidores de bases de datos pesados.
 
 #### Ayudas externas
-Para completar la tarea utilicé la documentación oficial de dlt sobre recursos paginados
-(https://dlthub.com/docs/general-usage/resource) y la documentación de DuckDB Python API
-(https://duckdb.org/docs/api/python/overview).
+Para completar la tarea utilicé la documentación oficial de dlt sobre recursos paginados y excepciones
+(https://dlthub.com/docs/) y la guía oficial de Pytest para el uso de mocks (https://docs.pytest.org/en/stable/).
 
-Asimismo, utilicé la asistencia de Gemini para estructurar las pruebas unitarias con mocks (`unittest.mock`) y
-garantizar el formato adecuado del informe dentro del rango de palabras requerido.
+Asimismo, utilicé la asistencia interactiva de Gemini para depurar la creación no deseada de tablas secundarias por
+normalización en `dlt`, adaptar los mocks de Pytest al esquema serializado con `json.dumps()` y redactar el informe.
 
 ---
 
 ### Qué harías distinto con más tiempo
 
 Con más tiempo, implementaría carga incremental (`incremental`) basada en marcas de tiempo para evitar re-descargar la
-totalidad de los registros en cada corrida, y agregaría validaciones de calidad de datos con `great_expectations` o
-contratos de datos de `dlt`.
+totalidad de los registros en cada corrida, y agregaría validaciones de calidad de datos con contratos de datos de
+`dlt`.
