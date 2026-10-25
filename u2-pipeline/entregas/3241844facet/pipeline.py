@@ -18,9 +18,9 @@ DB_PATH = Path("data.duckdb")
 @dlt.resource(name="pokemon", write_disposition="replace")
 def obtener_pokemon_api() -> Iterator[list[dict]]:
     """Extrae Pokémon con tipos, habilidades y movimientos desde PokeAPI."""
-    url = "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0"
+    url = "https://pokeapi.co/api/v2/pokemon?limit=40&offset=0"
 
-    max_paginas = 2
+    max_paginas = 5
     paginas_procesadas = 0
 
     while url and paginas_procesadas < max_paginas:

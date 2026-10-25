@@ -1,4 +1,4 @@
-# Informe de unidad -- plantilla
+# Informe de unidad
 
 Informe técnico acotado para el cierre de cada unidad
 
@@ -20,8 +20,7 @@ Informe técnico acotado para el cierre de cada unidad
 
 En esta segunda unidad construí un pipeline de extracción y carga (EL) automatizado en Python utilizando la librería
 `dlt` para consumir datos paginados desde la API pública PokeAPI (`https://pokeapi.co/api/v2/pokemon`), enriquecerlos
-con metadatos detallados de cada entidad (tipos, habilidades y movimientos principales) e insertarlos en el motor
-analítico `DuckDB`.
+con metadatos detallados de cada entidad (tipos, habilidades y movimientos) e insertarlos en el motor analítico `DuckDB`.
 
 #### Entorno
 Trabajé sobre el entorno configurado en el Dev Container del repositorio. Verifiqué la instalación de las
@@ -36,17 +35,19 @@ desarrollo y abrí el Pull Request correspondiente en mi fork hacia mi rama `mai
 
 ### Una decisión de diseño, explicada
 
-Elegí estructurar un pipeline de dos niveles dentro del recurso `pokemon` que serializa los atributos anidados mediante
-`json.dumps()`.
+Elegí estructurar un pipeline en el recurso `pokemon` que serializa los atributos anidados mediante `json.dumps()` y
+acota el consumo a 5 páginas con un límite de 40 registros por página (200 registros en total).
 
-Inicialmente, al enviar listas de Python dentro del diccionario (como `tipos: ['grass']`), el motor de normalización de
-`dlt` intentaba crear tablas relacionales secundarias conectadas por claves foráneas (`pokemon__tipos`). Para
-mantener un esquema plano de una sola tabla relacional en DuckDB, serialicé los arreglos a cadenas en formato JSON.
-Esto permite consultar los metadatos en una única tabla `raw_pokeapi.pokemon` sin requerir JOINs complejos.
+Por un lado, al enviar listas nativas, la normalización de `dlt` intentaba crear tablas relacionales secundarias
+(`pokemon__tipos`). Decidí rechazar la creación de tablas secundarias y mantener los atributos serializados en un solo
+campo para evitar JOINs complejos en DuckDB, preservando una estructura plana y eficiente en una única tabla.
 
-Adicionalmente, implementé la eliminación previa del archivo `data.duckdb` en `main()` usando `Path.unlink()` para
-garantizar la reconstrucción desde cero en cada ejecución, e incorporé pausas de *cooldown* con `time.sleep` para
-evitar el bloqueo o estrangulamiento de la IP por solicitudes consecutivas (*rate limiting*).
+Por otro lado, limitar la extracción a 10 páginas evita realizar más de 1.300 peticiones individuales al catálogo
+completo, acelerando la ejecución local a pocos segundos y previniendo el bloqueo de IP por *rate limiting*. Esto
+demuestra la paginación de forma óptima sin sobrecargar el servidor remoto.
+
+Adicionalmente, implementé la eliminación previa de `data.duckdb` en `main()` para garantizar la reconstrucción limpia
+e incorporé pausas de *cooldown* con `time.sleep` entre solicitudes.
 
 ---
 
@@ -80,7 +81,7 @@ Para completar la tarea utilicé la documentación oficial de dlt sobre recursos
 (https://dlthub.com/docs/) y la guía oficial de Pytest para el uso de mocks (https://docs.pytest.org/en/stable/).
 
 Asimismo, utilicé la asistencia interactiva de Gemini para depurar la creación no deseada de tablas secundarias por
-normalización en `dlt`, adaptar los mocks de Pytest al esquema serializado con `json.dumps()` y redactar el informe.
+normalización en `dlt`, evaluar el impacto del límite de páginas y redactar el informe técnico.
 
 ---
 
