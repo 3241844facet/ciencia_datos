@@ -84,10 +84,13 @@ Para completar la tarea utilicé la documentación oficial de dlt sobre recursos
 Asimismo, utilicé la asistencia interactiva de Gemini para depurar la creación no deseada de tablas secundarias por
 normalización en `dlt`, evaluar el impacto del límite de páginas y redactar el informe técnico.
 
+Para la validación general se adaptó el código del archivo validar_entrega para verificar los requisitos
+generales de entrega.
+
 ---
 
 ### Qué harías distinto con más tiempo
 
-Con más tiempo, implementaría carga incremental (`incremental`) basada en marcas de tiempo para evitar re-descargar la
+Implementaría carga incremental (`incremental`) basada en marcas de tiempo para evitar re-descargar la
 totalidad de los registros en cada corrida, y agregaría validaciones de calidad de datos con contratos de datos de
 `dlt`.
