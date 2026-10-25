@@ -1,4 +1,4 @@
-"""Script de verificación de datos almacenados en DuckDB."""
+"""Script de verificación de datos enriquecidos de PokeAPI en DuckDB."""
 
 from __future__ import annotations
 
@@ -6,25 +6,24 @@ import duckdb
 
 
 def verificar_base_datos(db_path: str = "data.duckdb") -> None:
-    """Abre DuckDB y ejecuta consultas analíticas sobre la tabla cargada."""
+    """Abre DuckDB y ejecuta consultas analíticas sobre los Pokémon cargados."""
     conexion = duckdb.connect(db_path)
 
     # 1. Conteo total de registros
-    total = conexion.execute(
-        "SELECT COUNT(*) FROM raw_rickandmorty.personajes"
-    ).fetchone()[0]
-    print(f"Total de personajes registrados en DuckDB: {total}")
+    total = conexion.execute("SELECT COUNT(*) FROM raw_pokeapi.pokemon").fetchone()[0]
+    print(f"Total de Pokémon registrados en DuckDB: {total}\n")
 
-    # 2. Conteo por estado del personaje
-    print("\nConteo de personajes por estado (status):")
-    res_status = conexion.execute(
-        "SELECT status, COUNT(*) as cantidad "
-        "FROM raw_rickandmorty.personajes "
-        "GROUP BY status ORDER BY cantidad DESC"
+    # 2. Muestra de Pokémon con metadatos
+    print("Muestra de Pokémon con metadatos enriquecidos:")
+    registros = conexion.execute(
+        "SELECT name, tipos, habilidades, movimientos FROM raw_pokeapi.pokemon LIMIT 5"
     ).fetchall()
 
-    for status, cantidad in res_status:
-        print(f" - {status}: {cantidad}")
+    for nombre, tipos, habilidades, movimientos in registros:
+        print(f"📌 {nombre.capitalize()}")
+        print(f"   - Tipos: {tipos}")
+        print(f"   - Habilidades: {habilidades}")
+        print(f"   - Movimientos principales: {movimientos}\n")
 
     conexion.close()
 

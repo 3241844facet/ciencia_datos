@@ -1,41 +1,87 @@
-"""Pipeline de ingesta utilizando dlt y DuckDB desde una API pública."""
+"""Pipeline de ingesta utilizando dlt y DuckDB desde PokeAPI con metadatos detallados."""
 
 from __future__ import annotations
 
-from typing import Iterator
+import json
+import logging
+import time
+from collections.abc import Iterator
+from pathlib import Path
+
 import dlt
 import requests
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+DB_PATH = Path("data.duckdb")
 
-@dlt.resource(name="personajes", write_disposition="replace")
-def obtener_personajes_api() -> Iterator[list[dict]]:
-    """Extrae personajes paginados desde Rick and Morty API."""
-    url = "https://rickandmortyapi.com/api/character"
-    while url:
+
+@dlt.resource(name="pokemon", write_disposition="replace")
+def obtener_pokemon_api() -> Iterator[list[dict]]:
+    """Extrae Pokémon con tipos, habilidades y movimientos desde PokeAPI."""
+    url = "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0"
+
+    max_paginas = 2
+    paginas_procesadas = 0
+
+    while url and paginas_procesadas < max_paginas:
         respuesta = requests.get(url, timeout=10)
         respuesta.raise_for_status()
         datos = respuesta.json()
 
-        # Emitimos la lista de resultados
-        yield datos.get("results", [])
+        pokemon_lista = datos.get("results", [])
+        detalles_pagina = []
 
-        # Obtenemos la siguiente página si existe
-        url = datos.get("info", {}).get("next")
+        for item in pokemon_lista:
+            res_detalle = requests.get(item["url"], timeout=10)
+            if res_detalle.status_code == 200:
+                detalle = res_detalle.json()
+
+                tipos = [t["type"]["name"] for t in detalle.get("types", [])]
+                habilidades = [h["ability"]["name"] for h in detalle.get("abilities", [])]
+                movimientos = [m["move"]["name"] for m in detalle.get("moves", [])[:5]]
+
+                detalles_pagina.append(
+                    {
+                        "id": detalle.get("id"),
+                        "name": detalle.get("name"),
+                        "height": detalle.get("height"),
+                        "weight": detalle.get("weight"),
+                        "tipos": json.dumps(tipos),
+                        "habilidades": json.dumps(habilidades),
+                        "movimientos": json.dumps(movimientos),
+                        "url": item["url"],
+                    }
+                )
+            time.sleep(0.1)
+
+        yield detalles_pagina
+
+        url = datos.get("next")
+        paginas_procesadas += 1
+        if url:
+            time.sleep(0.5)
 
 
 def construir_pipeline() -> dlt.Pipeline:
     """Configura el pipeline dlt apuntando al destino DuckDB."""
     return dlt.pipeline(
-        pipeline_name="rickandmorty_pipeline",
-        destination=dlt.destinations.duckdb("data.duckdb"),
-        dataset_name="raw_rickandmorty",
+        pipeline_name="pokeapi_pipeline",
+        destination=dlt.destinations.duckdb(str(DB_PATH)),
+        dataset_name="raw_pokeapi",
     )
 
 
 def main() -> None:
-    """Ejecuta la extracción y carga de datos."""
+    """Ejecuta la extracción y carga de datos desde cero."""
+    if DB_PATH.exists():
+        logging.info(
+            "Se detectó una base de datos DuckDB existente en %s. Eliminando...",
+            DB_PATH,
+        )
+        DB_PATH.unlink()
+
     pipeline = construir_pipeline()
-    info = pipeline.run(obtener_personajes_api())
+    info = pipeline.run(obtener_pokemon_api())
     print(info)
 
 
