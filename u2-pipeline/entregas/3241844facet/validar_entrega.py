@@ -43,9 +43,7 @@ def secciones_faltantes(markdown: str) -> list[str]:
         for linea in markdown.splitlines()
         if linea.startswith("#")
     ]
-    return [
-        s for s in SECCIONES if not any(e.startswith(s.lower()) for e in encabezados)
-    ]
+    return [s for s in SECCIONES if not any(e.startswith(s.lower()) for e in encabezados)]
 
 
 def contar_pruebas(codigo: str) -> int:
@@ -54,9 +52,7 @@ def contar_pruebas(codigo: str) -> int:
 
 
 def _git(*argumentos: str) -> str:
-    resultado = subprocess.run(
-        ["git", *argumentos], capture_output=True, text=True, check=True
-    )
+    resultado = subprocess.run(["git", *argumentos], capture_output=True, text=True, check=True)
     return resultado.stdout.strip()
 
 
@@ -76,9 +72,7 @@ def revisar(usuario: str, base: str, raiz: Path) -> list[tuple[bool, str]]:
         resultados.append((False, "El PR no cambia ningún archivo"))
 
     commits = int(_git("rev-list", "--count", "--no-merges", f"{base}..HEAD"))
-    resultados.append(
-        (commits >= MIN_COMMITS, f"Commits: {commits} (mínimo {MIN_COMMITS})")
-    )
+    resultados.append((commits >= MIN_COMMITS, f"Commits: {commits} (mínimo {MIN_COMMITS})"))
 
     informe = carpeta / "informe.md"
     if informe.exists():
