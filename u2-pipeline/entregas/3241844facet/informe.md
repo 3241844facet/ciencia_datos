@@ -28,8 +28,9 @@ dependencias `dlt`, `duckdb` y `requests`, asegurando que los comandos de prueba
 
 #### Flujo de Git
 Creé la rama de trabajo `u2/3241844facet` e introduje los archivos dentro de la carpeta
-`u2-pipeline/entregas/3241844facet/`. Realicé tres commits pequeños y explicativos según las buenas prácticas de
-desarrollo y abrí el Pull Request correspondiente en mi fork hacia mi rama `main`.
+`u2-pipeline/entregas/3241844facet/`. Desde allí todos los commits del proyecto fueron enviados según los avances 
+logrados, siendo estos lo suficientemente explicativos para cumplir las buenas prácticas de desarrollo y abrí el 
+Pull Request correspondiente en mi fork hacia la rama `main` del proyecto principal.
 
 ---
 
