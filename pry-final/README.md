@@ -102,7 +102,7 @@ Redactar un documento en formato Markdown (`informe.md`) de entre 700 y 1.000 pa
 Cada equipo entregará su trabajo dentro de una carpeta identificada con sus usuarios:
 
 ```text
-pyt-pipeline/
+pry-final/
 └── entregas/
     └── equipo-<nombre_equipo>/
         ├── pyproject.toml
