@@ -24,7 +24,8 @@ Crea y activa un entorno virtual de Python e instala las dependencias del proyec
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install "dlt[duckdb]" dbt-duckdb dagster pytest pandas
+pip install uv
+uv sync
 ```
 
 ### 2. Generación de Datos Sintéticos
