@@ -25,5 +25,6 @@ models:
       - name: producto_id
         tests:
           - relationships:
-              to: ref('stg_productos')
-              field: producto_id
+              arguments:
+                to: ref('stg_productos')
+                field: producto_id

@@ -10,7 +10,8 @@ models:
       - name: clasificacion_abc
         tests:
           - accepted_values:
-              values: ['A', 'B', 'C']
+              arguments:
+                values: ['A', 'B', 'C']
 
   - name: mart_ventas_diarias
     columns:
