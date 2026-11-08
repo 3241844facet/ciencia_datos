@@ -2,8 +2,9 @@ import dlt
 import pandas as pd
 
 
-def cargar_archivos_csv():
-    """Generador que cede cada dataset CSV como recurso dlt."""
+@dlt.source
+def minimercado_source():
+    """Fuente de dlt que expone cada CSV como un recurso independiente."""
     tablas = [
         "productos",
         "vendedores",
@@ -11,23 +12,37 @@ def cargar_archivos_csv():
         "ventas",
         "movimientos_stock",
     ]
+
+    resources = []
     for tabla in tablas:
         df = pd.read_csv(f"data/{tabla}.csv")
-        yield dlt.resource(
-            df,
+        # Convertir a lista de diccionarios elimina la dependencia de pyarrow
+        records = df.to_dict(orient="records")
+
+        def make_generator(data_list):
+            def generator():
+                yield data_list
+
+            return generator
+
+        res = dlt.resource(
+            make_generator(records),
             name=tabla,
-            write_disposition="replace",  # Idempotencia al reejecutar
+            write_disposition="replace",
         )
+        resources.append(res)
+
+    return resources
 
 
 def run_pipeline():
-    """Carga de archivos CSV hacia la base de datos DuckDB."""
+    """Ejecuta la ingesta a la base de datos DuckDB."""
     pipeline = dlt.pipeline(
         pipeline_name="minimercado_ingestion",
         destination="duckdb",
         dataset_name="main",
     )
-    load_info = pipeline.run(cargar_archivos_csv(), credentials="data.duckdb")
+    load_info = pipeline.run(minimercado_source(), credentials="data.duckdb")
     print(load_info)
 
 
