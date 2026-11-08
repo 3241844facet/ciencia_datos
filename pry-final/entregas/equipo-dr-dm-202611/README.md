@@ -47,8 +47,8 @@ Ejecuta los modelos analíticos (Staging, Intermediate y Marts) junto con la sui
 
 ```bash
 cd dbt_project
-dbt run --profiles-dir .
-dbt test --profiles-dir .
+dbt --warn-error-options '{"silence_executions": ["MissingArgumentsPropertyInGenericTestDeprecation"]}' run --profiles-dir .
+dbt --warn-error-options '{"silence_executions": ["MissingArgumentsPropertyInGenericTestDeprecation"]}' test --profiles-dir .
 cd ..
 ```
 
@@ -64,15 +64,11 @@ Materializa los activos de datos o inicia la interfaz gráfica interactiva de Da
 
 ```bash
 # Materialización por línea de comandos
-dagster asset materialize --select "*" -f orchestration/definitions.py
-
-# O bien, iniciar la interfaz web local (Dagster UI)
-dagster dev -f orchestration/definitions.py
-
+export PYTHONPATH=$(pwd):$PYTHONPATH
+python -W ignore -m dagster asset materialize --select "*" -f orchestration/definitions.py
 ```
 
 ---
-
 ## Ejecución Automática (Script Shell)
 
 Para facilitar el despliegue y simplificar el proceso de evaluación, se incluye el script Bash `ejecutar_proyecto.sh`. Este script automatiza secuencialmente la ejecución de los 5 pasos del pipeline con reportes en consola de cada etapa.
@@ -82,5 +78,4 @@ Para ejecutar todo el pipeline de principio a fin de manera automática, corre l
 ```bash
 chmod +x ejecutar_proyecto.sh
 ./ejecutar_proyecto.sh
-
 ```
