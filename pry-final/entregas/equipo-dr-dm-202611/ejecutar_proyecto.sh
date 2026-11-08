@@ -5,8 +5,13 @@
 # Autores: David Reese & Diana Moré
 # ==============================================================================
 
-# Detener la ejecución inmediatamente si ocurre algún error en cualquiera de los comandos
+# Detener la ejecución si ocurre un error inesperado
 set -e
+
+# Silenciar advertencias de Python en todo el script
+export PYTHONWARNINGS="ignore"
+# Silenciar advertencias de deprecación de dbt
+export DBT_SUPPRESS_DEPRECATION_WARNINGS="all"
 
 echo "======================================================================"
 echo "INICIANDO EJECUCIÓN DEL PIPELINE DE DATOS - MINIMERCADO"
@@ -57,7 +62,8 @@ echo ""
 # Paso 5: Verificación de Orquestación con Dagster
 # ------------------------------------------------------------------------------
 echo "[Paso 5/5] Validando definición de assets de Dagster..."
-dagster asset materialize --select "*" -f orchestration/definitions.py
+export PYTHONPATH=$(pwd):$PYTHONPATH
+python -W ignore -m dagster asset materialize --select "*" -f orchestration/definitions.py
 echo "Assets de Dagster materializados y verificados."
 echo ""
 

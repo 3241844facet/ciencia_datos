@@ -120,4 +120,4 @@ def generar_datos_minimercado(seed: int = 42) -> None:
 
 if __name__ == "__main__":
     generar_datos_minimercado()
-    print("✅ Datos sintéticos generados en la carpeta 'data/'.")
+    print("Datos sintéticos generados en la carpeta 'data/'.")
