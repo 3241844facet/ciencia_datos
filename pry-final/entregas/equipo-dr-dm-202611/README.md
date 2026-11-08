@@ -1,48 +1,85 @@
 # Pipeline Analítico de Minimercado — Modern Data Stack
-Proyecto integrador que implementa un pipeline ETL/ELT analítico end-to-end reproducible.
+
+Proyecto integrador que implementa un pipeline ETL/ELT analítico end-to-end reproducible utilizando herramientas modernas de ingeniería y analítica de datos (**Python, dlt, DuckDB, dbt, Dagster y Pytest**).
+
+---
 
 ## Integrantes del Equipo
-* **David Reese**: Data Engineer (Generación sintética, Ingesta idempotente con dlt, DuckDB).
-* **Diana Moré**: Analytics Engineer & QA (Modelado dbt, Orquestación con Dagster, Pytest, Informe).
+* **David Reese** — *Data Engineer* (Generación sintética, ingesta idempotente con `dlt`, integración con `DuckDB`).
+* **Diana Moré** — *Analytics Engineer & QA* (Modelado dimensional con `dbt`, orquestación con `Dagster`, pruebas automatizadas con `pytest`, informe técnico).
 
 ---
+
 ## Requisitos Previos
-* Python 3.10 o superior
-* Git
+* **Python:** 3.10 o superior (recomendado 3.11)
+* **Git**
+* Entorno basado en Linux / macOS (o WSL2 en Windows)
 
 ---
+
 ## Guía de Instalación y Ejecución Paso a Paso
 ### 1. Entorno e Instalación de Dependencias
+Crea y activa un entorno virtual de Python e instala las dependencias del proyecto:
+
 ```bash
-python -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install "dlt[duckdb]" dbt-duckdb dagster pytest pandas
 ```
 
-2. Generación de Datos Sintéticos
-```Bash
+### 2. Generación de Datos Sintéticos
+Produce los conjuntos de datos de prueba deterministas (90 días de actividad comercial) en la carpeta `data/`:
+
+```bash
 python generar_datos.py
 ```
 
-3. Ingesta a DuckDB con dlt
-```Bash
+### 3. Ingesta a DuckDB con `dlt`
+Carga de forma idempotente los archivos CSV generados hacia la base de datos relacional local `data.duckdb`:
+
+```bash
 python pipeline.py
 ```
 
-4. Transformaciones y Pruebas con dbt
-```Bash
+### 4. Transformaciones y Pruebas con `dbt`
+Ejecuta los modelos analíticos (Staging, Intermediate y Marts) junto con la suite de pruebas de integridad SQL:
+
+```bash
 cd dbt_project
 dbt run --profiles-dir .
 dbt test --profiles-dir .
 cd ..
 ```
 
-5. Orquestación Automatizada con Dagster
-```Bash
-dagster dev -f orchestration/definitions.py
+### 5. Suite de Pruebas Automatizadas (`pytest`)
+Valida la reproducibilidad global del pipeline y la estructura de la base de datos:
+
+```bash
+pytest test_pipeline.py -v
 ```
 
-6. Ejecución del Suite de Pruebas Automatizadas
-```Bash
-pytest test_pipeline.py -v
+### 6. Orquestación y Visualización con Dagster
+Materializa los activos de datos o inicia la interfaz gráfica interactiva de Dagster:
+
+```bash
+# Materialización por línea de comandos
+dagster asset materialize --select "*" -f orchestration/definitions.py
+
+# O bien, iniciar la interfaz web local (Dagster UI)
+dagster dev -f orchestration/definitions.py
+
+```
+
+---
+
+## Ejecución Automática (Script Shell)
+
+Para facilitar el despliegue y simplificar el proceso de evaluación, se incluye el script Bash `ejecutar_proyecto.sh`. Este script automatiza secuencialmente la ejecución de los 5 pasos del pipeline con reportes en consola de cada etapa.
+
+Para ejecutar todo el pipeline de principio a fin de manera automática, corre los siguientes comandos desde la raíz del proyecto:
+
+```bash
+chmod +x ejecutar_proyecto.sh
+./ejecutar_proyecto.sh
+
 ```
