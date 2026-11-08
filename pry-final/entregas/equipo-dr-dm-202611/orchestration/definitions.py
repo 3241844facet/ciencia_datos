@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+
 from dagster import Definitions, asset
 
 # Obtener la ruta absoluta de la raíz del proyecto
@@ -46,9 +47,7 @@ def reporte_calidad_asset():
 
     db_path = os.path.join(ROOT_DIR, "data.duckdb")
     con = duckdb.connect(db_path)
-    count = con.execute(
-        "SELECT COUNT(*) FROM main.mart_rentabilidad_productos"
-    ).fetchone()[0]
+    count = con.execute("SELECT COUNT(*) FROM main.mart_rentabilidad_productos").fetchone()[0]
     con.close()
     assert count > 0, "Error QA: El Mart de rentabilidad no contiene datos."
 

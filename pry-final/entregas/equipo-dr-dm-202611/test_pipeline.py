@@ -1,6 +1,6 @@
 import os
+
 import duckdb
-import pytest
 from generar_datos import generar_datos_minimercado
 from pipeline import run_pipeline
 
@@ -8,11 +8,11 @@ from pipeline import run_pipeline
 def test_reproducibilidad_generar_datos():
     """Verifica que la semilla garantice la reproducibilidad exacta de los CSV."""
     generar_datos_minimercado(seed=42)
-    with open("data/productos.csv", "r") as f:
+    with open("data/productos.csv") as f:
         data1 = f.read()
 
     generar_datos_minimercado(seed=42)
-    with open("data/productos.csv", "r") as f:
+    with open("data/productos.csv") as f:
         data2 = f.read()
 
     assert data1 == data2, "Falló la reproducibilidad del generador de datos."

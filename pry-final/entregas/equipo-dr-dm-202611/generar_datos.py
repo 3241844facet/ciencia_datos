@@ -1,6 +1,7 @@
 import os
 import random
 from datetime import datetime, timedelta
+
 import pandas as pd
 
 
@@ -38,9 +39,9 @@ def generar_datos_minimercado(seed: int = 42) -> None:
                 "id": i,
                 "nombre": f"Vendedor_{i}",
                 "sucursal": random.choice(sucursales),
-                "fecha_alta": (
-                    fecha_base - timedelta(days=random.randint(30, 300))
-                ).strftime("%Y-%m-%d"),
+                "fecha_alta": (fecha_base - timedelta(days=random.randint(30, 300))).strftime(
+                    "%Y-%m-%d"
+                ),
             }
         )
     df_vendedores = pd.DataFrame(vendedores_data)
@@ -113,9 +114,7 @@ def generar_datos_minimercado(seed: int = 42) -> None:
 
     pd.DataFrame(compras_data).to_csv("data/compras.csv", index=False)
     pd.DataFrame(ventas_data).to_csv("data/ventas.csv", index=False)
-    pd.DataFrame(movimientos_data).to_csv(
-        "data/movimientos_stock.csv", index=False
-    )
+    pd.DataFrame(movimientos_data).to_csv("data/movimientos_stock.csv", index=False)
 
 
 if __name__ == "__main__":
