@@ -61,7 +61,7 @@ fi
 
 if [ "$EXISTEN_ARTEFACTOS" = true ]; then
     echo "Se detectaron archivos de ejecuciones anteriores (archivos en data/, .duckdb, target, etc.)."
-    read -p "Deseas eliminar todos los artefactos previos antes de continuar? (s/n): " RESPUESTA_LIMPIEZA
+    read -p "Deseas eliminar todos los artefactos previos antes de continuar? (s/N): " RESPUESTA_LIMPIEZA
     echo ""
 
     if [[ "$RESPUESTA_LIMPIEZA" =~ ^[Ss]$ ]]; then
@@ -89,7 +89,7 @@ if [ "$EXISTEN_ARTEFACTOS" = true ]; then
         echo "Limpieza profunda completada (la carpeta 'data/' se conserva vacía)."
         echo ""
 
-        read -p "Deseas continuar con la ejecución del pipeline? (s/n): " RESPUESTA_CONTINUAR
+        read -p "Deseas continuar con la ejecución del pipeline? (s/N): " RESPUESTA_CONTINUAR
         echo ""
         if [[ ! "$RESPUESTA_CONTINUAR" =~ ^[Ss]$ ]]; then
             echo "Ejecución finalizada por el usuario. El entorno ha quedado limpio."
