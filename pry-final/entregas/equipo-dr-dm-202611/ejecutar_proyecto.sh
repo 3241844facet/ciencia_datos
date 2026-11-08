@@ -19,6 +19,86 @@ echo "======================================================================"
 echo ""
 
 # ------------------------------------------------------------------------------
+# Paso 0: Verificación y Limpieza Previa de Artefactos Generados
+# ------------------------------------------------------------------------------
+EXISTEN_ARTEFACTOS=false
+
+# Verificación de carpetas o archivos generados conocidos
+ARTEFACTOS_RUTAS=(
+  "data"
+  "data.duckdb"
+  "data.duckdb.wal"
+  ".dlt"
+  "dbt_project/target"
+  "dbt_project/dbt_packages"
+  "dbt_project/logs"
+  ".pytest_cache"
+  ".dagster"
+)
+
+for art in "${ARTEFACTOS_RUTAS[@]}"; do
+    if [ -e "$art" ]; then
+        EXISTEN_ARTEFACTOS=true
+        break
+    fi
+done
+
+# Verificación de archivos .pyc o carpetas __pycache__ en todo el proyecto
+if [ "$EXISTEN_ARTEFACTOS" = false ]; then
+    if find . -type d -name "__pycache__" -o -type f -name "*.pyc" | read -r; then
+        EXISTEN_ARTEFACTOS=true
+    fi
+fi
+
+# Verificación de temporales de Dagster
+if [ "$EXISTEN_ARTEFACTOS" = false ]; then
+    if ls .tmp_dagster_home_* 1> /dev/null 2>&1; then
+        EXISTEN_ARTEFACTOS=true
+    fi
+fi
+
+if [ "$EXISTEN_ARTEFACTOS" = true ]; then
+    echo "Se detectaron archivos o directorios de ejecuciones anteriores (.duckdb, .pyc, target, logs, etc.)."
+    read -p "¿Deseas eliminar todos los artefactos previos antes de continuar? (s/n): " RESPUESTA_LIMPIEZA
+    echo ""
+
+    if [[ "$RESPUESTA_LIMPIEZA" =~ ^[Ss]$ ]]; then
+        echo "Limpiando artefactos previos..."
+
+        # Archivos de datos e ingesta
+        rm -rf data/
+        rm -f data.duckdb data.duckdb.wal
+        rm -rf .dlt/
+
+        # Artefactos de compilación y ejecución de dbt
+        rm -rf dbt_project/target/
+        rm -rf dbt_project/dbt_packages/
+        rm -rf dbt_project/logs/
+
+        # Cachés de Python, Pytest y Dagster
+        find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+        find . -type f -name "*.pyc" -delete 2>/dev/null || true
+        rm -rf .pytest_cache/
+        rm -rf .dagster/
+        rm -rf .tmp_dagster_home_* 2>/dev/null || true
+
+        echo "Limpieza profunda completada."
+        echo ""
+
+        # Preguntar si se desea continuar con la ejecución del pipeline tras la limpieza
+        read -p "¿Deseas continuar con la ejecución del pipeline? (s/n): " RESPUESTA_CONTINUAR
+        echo ""
+        if [[ ! "$RESPUESTA_CONTINUAR" =~ ^[Ss]$ ]]; then
+            echo "Ejecución finalizada por el usuario. El entorno ha quedado limpio."
+            exit 0
+        fi
+    else
+        echo "Continuando la ejecución conservando los artefactos existentes."
+        echo ""
+    fi
+fi
+
+# ------------------------------------------------------------------------------
 # Paso 1: Generación de Datos Sintéticos
 # ------------------------------------------------------------------------------
 echo "[Paso 1/5] Generando datos sintéticos reproducibles..."
